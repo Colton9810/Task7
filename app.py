@@ -17,19 +17,15 @@ import nltk
 
 app = Flask(__name__)
 
-# Download stopwords from nltk
+# Stopword Packages
 nltk.download('punkt')
 nltk.download('stopwords')
 nltk.download('averaged_perceptron_tagger')
-
-# Load NLTK stop words
 stop_words = set(stopwords.words('english'))
 
-# Function to read list from txt file
 def read_list_from_txt(file):
     return [line.strip() for line in file.read().decode('utf-8').splitlines() if line.strip()]
 
-# Function to remove stop words and punctuation from text
 def remove_stop_words_and_punctuation(text):
     tokens = word_tokenize(text)
     filtered_tokens = [
@@ -38,7 +34,6 @@ def remove_stop_words_and_punctuation(text):
     ]
     return ' '.join(filtered_tokens)
 
-# Function to extract keywords from reviews using topic modeling
 def extract_keywords_from_reviews(reviews):
     # Remove stop words and punctuation from reviews
     processed_reviews = [remove_stop_words_and_punctuation(review.lower()) for review in reviews]
@@ -46,16 +41,13 @@ def extract_keywords_from_reviews(reviews):
     # Tokenize the processed reviews
     texts = [review.split() for review in processed_reviews]
     
-    # Create a dictionary and corpus
     dictionary = corpora.Dictionary(texts)
     corpus = [dictionary.doc2bow(text) for text in texts]
     
     # Train LDA model
     num_topics = min(5, len(dictionary))  # Increase the number of topics
     lda_model = models.LdaModel(corpus, num_topics=num_topics, id2word=dictionary, passes=15)
-    
-    # Extract topics
-    topics = lda_model.show_topics(num_words=20, formatted=False)  # Increase number of words per topic
+    topics = lda_model.show_topics(num_words=30, formatted=False)
     
     # Extract keywords
     keywords = set()
@@ -63,21 +55,20 @@ def extract_keywords_from_reviews(reviews):
         for word, _ in topic[1]:
             keywords.add(word)
     
-    # Further filtering: Remove common words using frequency analysis
+    # Remove common words using frequency analysis
     all_words = [word for text in texts for word in text]
     fdist = FreqDist(all_words)
     
-    # Adjust minimum frequency threshold
-    min_freq = 2
+    # Minimum Frequency
+    min_freq = 50
     keywords = {word for word in keywords if fdist[word] >= min_freq}
     
-    # Optionally, filter keywords by part-of-speech
     tagged_keywords = pos_tag(keywords)
     keywords = {word for word, pos in tagged_keywords if pos in ('NN', 'NNS', 'JJ', 'VB')}
     
     return list(keywords)
 
-# Function to count mentions in reviews
+# Count frequency of words
 def count_mentions(reviews, items):
     item_counts = {item: 0 for item in items}
     for review in reviews:
@@ -87,15 +78,15 @@ def count_mentions(reviews, items):
                 item_counts[item] += 1
     return item_counts
 
-# Function for sentiment analysis using TextBlob
+# Perform sentiment analysis
 def analyze_sentiment(text, model=None):
     if model:
-        return model.predict([text])[0]  # Predict sentiment using custom model
+        return model.predict([text])[0]
     else:
         analysis = TextBlob(text)
         return analysis.sentiment.polarity
 
-# Train a sentiment model
+# If labels are provided
 def train_sentiment_model(labeled_data):
     X = labeled_data['text']
     y = labeled_data['label']
@@ -129,11 +120,11 @@ def upload():
     reviews_data = read_list_from_txt(reviews_file)
     reviews = [review.lower() for review in reviews_data]
 
-    # Load items
+    # Load item list if provided
     if items_file:
         items = read_list_from_txt(items_file)
     else:
-        # Extract keywords from reviews using topic modeling
+        # If the user doesn't have a topic list, extract topics
         items = extract_keywords_from_reviews(reviews)
 
     # Initialize model and label encoder
@@ -155,7 +146,7 @@ def upload():
                 sentiment_score = analyze_sentiment(review, custom_model)
                 item_sentiments[item].append(sentiment_score)
 
-    # Rank items based on mentions and sentiment
+    # Rank items based on frequency and sentiment
     item_ranking = {}
     for item in items:
         mentions = item_counts[item]
