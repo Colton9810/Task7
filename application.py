@@ -15,7 +15,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder
 import nltk
 
-app = Flask(__name__)
+application = Flask(__name__)  # Changed 'app' to 'application'
 
 # Stopword Packages
 nltk.download('punkt')
@@ -106,11 +106,11 @@ def train_sentiment_model(labeled_data):
     
     return pipeline, label_encoder
 
-@app.route('/', methods=['GET'])
+@application.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
 
-@app.route('/upload', methods=['POST'])
+@application.route('/upload', methods=['POST'])
 def upload():
     items_file = request.files.get('items_file')
     reviews_file = request.files['reviews_file']
@@ -176,4 +176,4 @@ def upload():
     return render_template('index.html', plot_url='data:image/png;base64,' + plot_url)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    application.run()  # Adjusted to be compatible with AWS
