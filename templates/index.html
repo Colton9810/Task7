@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Analysis Tool</title>
+</head>
+<body>
+    <h1>Sentiment Analysis Tool</h1>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <label for="reviews_file">Upload list of revies:</label>
+        <input type="file" id="reviews_file" name="reviews_file" accept=".txt" required><br><br>
+        <label for="items_file">Upload list of items (Optional):</label>
+        <input type="file" id="items_file" name="items_file" accept=".txt"><br><br>
+        <label for="labels_file">Upload labeled data (Optional):</label>
+        <input type="file" id="labels_file" name="labels_file" accept=".csv"><br><br>
+        <button type="submit">Analyze Sentiment</button>
+    </form>
+    {% if plot_url %}
+    <h2>Sentiment Analysis Result</h2>
+    <img src="{{ plot_url }}" alt="Sentiment Analysis Result">
+    {% endif %}
+</body>
+</html>
